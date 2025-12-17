@@ -1,0 +1,10 @@
+# Testing files
+tests/
+
+# Cache files
+__pycache__/
+*.pyc
+*.pyo
+
+# OSX
+.DS_Store
