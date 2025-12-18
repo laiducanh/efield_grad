@@ -1,5 +1,6 @@
 # Testing files
 tests/
+test.ipynb
 
 # Cache files
 __pycache__/
