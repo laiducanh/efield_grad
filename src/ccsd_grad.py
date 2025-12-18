@@ -1,20 +1,18 @@
 from pyscf.grad import ccsd
 from pyscf.lib import logger
-import numpy as np
 from .utilis import relaxed_dm, finalize
-from .grad import grad_efield, ccsd_deriv_fd
+from .grad import grad_efield
+from .finite_diff import ccsd_grad_fd
+import numpy as np
 
 class EFieldCCSDGradients(ccsd.Gradients):
     _keys = ccsd.Gradients._keys
     _keys.update({'efield_strength', 'efield_R', 'efield_atoms'})
-    def __init__(self, method, efield=0.0, Rotation=np.eye(3), atoms=None):
+    def __init__(self, method):
         super().__init__(method)
-        self.efield_strength = efield
-        self.efield_R = Rotation
-        if atoms is None:
-            self.efield_atoms = None
-        else:
-            self.efield_atoms = list(atoms)
+        self.efield_strength = method._scf.efield_strength
+        self.efield_R = method._scf.efield_R
+        self.efield_atoms = method._scf.efield_atoms
 
     def kernel(self, t1=None, t2=None, l1=None, l2=None, eris=None,
                      atmlst=None, verbose=None):
@@ -53,8 +51,8 @@ class EFieldCCSDGradients(ccsd.Gradients):
         if self.mol.symmetry:
             self.de = self.symmetrize(self.de, atmlst)
         
-        # de_fd = ccsd_deriv_fd(self.mol, self.efield_strength, self.efield_R)
-        # logger.note(self, 'Check with finite difference %.10f' % np.linalg.norm(de_fd-self.de))
+        de_fd = ccsd_grad_fd(self.mol, self.efield_strength, self.efield_R, self.efield_atoms)
+        logger.note(self, 'Check with finite difference %.10f' % np.linalg.norm(de_fd-self.de))
         # self._write(self.mol, de_fd, self.atmlst)
         
         self._finalize()
